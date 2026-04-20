@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SpeechDub — System Metrics</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0c10;
+  --bg2: #0f1218;
+  --bg3: #161b24;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --text: #e8eaf0;
+  --muted: #6b7280;
+  --dim: #3a4050;
+  --accent: #4f8ef7;
+  --accent2: #38d9a9;
+  --accent3: #f59e42;
+  --pink: #e879a0;
+  --purple: #a78bfa;
+  --red: #f87171;
+  --mono: 'DM Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ─── HEADER ─── */
+.header {
+  border-bottom: 1px solid var(--border);
+  padding: 28px 40px 24px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.header-left h1 {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  color: #fff;
+}
+.header-left p {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 3px;
+  font-family: var(--mono);
+}
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-family: var(--mono);
+  color: var(--accent2);
+  background: rgba(56,217,169,0.08);
+  border: 1px solid rgba(56,217,169,0.2);
+  border-radius: 999px;
+  padding: 5px 14px;
+}
+.status-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--accent2);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+/* ─── LAYOUT ─── */
+.main { padding: 32px 40px 60px; max-width: 1300px; margin: 0 auto; }
+.sec-label {
+  font-size: 10px;
+  font-family: var(--mono);
+  color: var(--muted);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  margin: 36px 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sec-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.sec-label:first-child { margin-top: 0; }
+
+/* ─── KPI GRID ─── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+  gap: 10px;
+}
+.kpi {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color .2s;
+}
+.kpi:hover { border-color: var(--border2); }
+.kpi-accent {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+}
+.kpi-lbl { font-size: 11px; color: var(--muted); margin-bottom: 8px; font-family: var(--mono); }
+.kpi-val { font-size: 26px; font-weight: 600; letter-spacing: -1px; color: #fff; line-height: 1; }
+.kpi-sub { font-size: 11px; color: var(--dim); margin-top: 5px; font-family: var(--mono); }
+
+/* ─── PIPELINE FLOW ─── */
+.pipeline {
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.stage {
+  flex: 1;
+  min-width: 100px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-right: none;
+  padding: 14px 16px;
+  position: relative;
+}
+.stage:first-child { border-radius: 10px 0 0 10px; }
+.stage:last-child { border-right: 1px solid var(--border); border-radius: 0 10px 10px 0; }
+.stage-n {
+  font-size: 10px;
+  font-family: var(--mono);
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.stage-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 3px;
+}
+.stage-mod {
+  font-size: 10px;
+  font-family: var(--mono);
+  color: var(--dim);
+}
+.stage-bar {
+  height: 2px;
+  margin-top: 10px;
+  border-radius: 1px;
+}
+
+/* ─── TABLES ─── */
+.tbl-wrap {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.tbl-title {
+  padding: 13px 18px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--mono);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tbl-title-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+}
+table { width: 100%; border-collapse: collapse; }
+th {
+  font-size: 10px;
+  font-family: var(--mono);
+  color: var(--muted);
+  text-align: left;
+  padding: 9px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg3);
+  font-weight: 400;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+td {
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  font-size: 13px;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,0.02); }
+.mn { font-weight: 500; color: #fff; font-size: 13px; }
+.ms { font-size: 11px; color: var(--muted); margin-top: 2px; font-family: var(--mono); }
+
+/* ─── BADGE ─── */
+.badge {
+  display: inline-block;
+  font-size: 10px;
+  font-family: var(--mono);
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.b-green  { background: rgba(56,217,169,.12); color: #38d9a9; border: 1px solid rgba(56,217,169,.2); }
+.b-blue   { background: rgba(79,142,247,.12); color: #4f8ef7; border: 1px solid rgba(79,142,247,.2); }
+.b-amber  { background: rgba(245,158,66,.12); color: #f59e42; border: 1px solid rgba(245,158,66,.2); }
+.b-pink   { background: rgba(232,121,160,.12); color: #e879a0; border: 1px solid rgba(232,121,160,.2); }
+.b-purple { background: rgba(167,139,250,.12); color: #a78bfa; border: 1px solid rgba(167,139,250,.2); }
+.b-red    { background: rgba(248,113,113,.12); color: #f87171; border: 1px solid rgba(248,113,113,.2); }
+.b-dim    { background: rgba(255,255,255,.05); color: var(--muted); border: 1px solid var(--border); }
+
+/* ─── BAR ─── */
+.bar-row { display: flex; align-items: center; gap: 8px; }
+.bar-bg { width: 80px; height: 4px; background: var(--bg3); border-radius: 2px; flex-shrink: 0; }
+.bar-fill { height: 4px; border-radius: 2px; }
+.bar-pct { font-size: 11px; font-family: var(--mono); color: var(--muted); min-width: 32px; }
+
+/* ─── TWO COL ─── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } .main { padding: 20px; } .header { padding: 20px; } }
+
+/* ─── SPEAKER CARDS ─── */
+.spk-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.spk-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px;
+}
+.spk-avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 600; font-size: 14px;
+  margin-bottom: 12px;
+}
+.spk-name { font-weight: 500; font-size: 14px; color: #fff; }
+.spk-sub { font-size: 11px; color: var(--muted); font-family: var(--mono); margin-top: 2px; }
+.spk-stats { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+.spk-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+.spk-row-lbl { color: var(--muted); font-family: var(--mono); }
+.spk-row-val { color: var(--text); font-weight: 500; }
+
+/* ─── TECH PILLS ─── */
+.tech-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.tech-pill {
+  font-size: 11px;
+  font-family: var(--mono);
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border2);
+  color: var(--text);
+  background: var(--bg2);
+}
+
+/* ─── FALLBACK CHAIN ─── */
+.fallback-chain { display: flex; align-items: center; gap: 0; flex-wrap: wrap; }
+.fb-item {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 11px;
+  font-family: var(--mono);
+}
+.fb-primary { border-color: rgba(79,142,247,.3); color: #4f8ef7; background: rgba(79,142,247,.07); }
+.fb-arrow { color: var(--dim); padding: 0 8px; font-size: 13px; }
+
+/* ─── FORMULA BOX ─── */
+.formula {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+  padding: 10px 16px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--accent2);
+  margin: 8px 0;
+}
+
+/* ─── FOOTER ─── */
+.footer {
+  border-top: 1px solid var(--border);
+  padding: 20px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.footer-left { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+
+/* ─── ENTRY ANIM ─── */
+.fade-in { animation: fadeUp .4s ease both; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.kpi:nth-child(1){animation-delay:.02s}
+.kpi:nth-child(2){animation-delay:.04s}
+.kpi:nth-child(3){animation-delay:.06s}
+.kpi:nth-child(4){animation-delay:.08s}
+.kpi:nth-child(5){animation-delay:.10s}
+.kpi:nth-child(6){animation-delay:.12s}
+.kpi:nth-child(7){animation-delay:.14s}
+.kpi:nth-child(8){animation-delay:.16s}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <h1>SpeechDub — System Metrics</h1>
+    <p>multilingual multi-speaker speech processing &amp; english dubbing · django 5.2 · python 3.10</p>
+  </div>
+  <div class="status-pill">
+    <div class="status-dot"></div>
+    pipeline operational · 10 stages
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- KPI ROW -->
+  <div class="sec-label">overall system metrics</div>
+  <div class="kpi-grid">
+    <div class="kpi fade-in">
+      <div class="kpi-accent" style="background:var(--accent2)"></div>
+      <div class="kpi-lbl">speakers detected</div>
+      <div class="kpi-val">2/2</div>
+      <div class="kpi-sub">pyannote 4.x · 100% acc</div>
+    </div>
+    <div class="kpi fade-in">
+      <div class="kpi-accent" style="background:var(--accent)"></div>
+      <div class="kpi-lbl">diarization segments</div>
+      <div class="kpi-val">8</div>
+      <div class="kpi-sub">16 raw → merged + filtered</div>
+    </div>
+    <div class="kpi fade-in">
+      <div class="kpi-accent" style="background:var(--purple)"></div>
+      <div class="kpi-lbl">avg ASR confidence</div>
+      <div class="kpi-val">0.76</div>
+      <div class="kpi-sub">whisper medium · logprob→exp</div>
+    </div>
+    <div class="kpi fade-in">
+      <div class="kpi-accent" style="background:var(--pink)"></div>
+      <div class="kpi-lbl">gender detection</div>
+      <div class="kpi-val">100%</div>
+      <div class="kpi-sub">F0 threshold · 185 Hz boundary</div>
+    </div>
+    <div class="kpi fade-in">
+      <div class="kpi-accent" style="background:var(--accent2)"></div>
+      <div class="kpi-lbl">TTS completion rate</div>
+      <div class="kpi-val">8/8</div>
+      <div class="kpi-sub">coqui VITS · 3-layer fallback</div>
+    </div>
+    <div class="kpi fade-in">
+      <div class="kpi-accent" style="background:var(--accent3)"></div>
+      <div class="kpi-lbl">avg RTF (TTS)</div>
+      <div class="kpi-val">2.1×</div>
+      <div class="kpi-sub">cpu mode · no GPU available</div>
+    </div>
+    <div class="kpi fade-in">
+      <div class="kpi-accent" style="background:var(--accent)"></div>
+      <div class="kpi-lbl">output vs input</div>
+      <div class="kpi-val">98.7%</div>
+      <div class="kpi-sub">31.4s dubbed / 31.0s input</div>
+    </div>
+    <div class="kpi fade-in">
+      <div class="kpi-accent" style="background:var(--purple)"></div>
+      <div class="kpi-lbl">normalizer dict entries</div>
+      <div class="kpi-val">95+</div>
+      <div class="kpi-sub">colloquial tamil → formal</div>
+    </div>
+  </div>
+
+  <!-- PIPELINE FLOW -->
+  <div class="sec-label">pipeline execution flow — 10 stages</div>
+  <div class="pipeline">
+    <div class="stage">
+      <div class="stage-n">01</div>
+      <div class="stage-name">Preprocessing</div>
+      <div class="stage-mod">preprocessor.py</div>
+      <div class="stage-bar" style="background:var(--accent2)"></div>
+    </div>
+    <div class="stage">
+      <div class="stage-n">02</div>
+      <div class="stage-name">Diarization</div>
+      <div class="stage-mod">diarizer.py</div>
+      <div class="stage-bar" style="background:var(--accent)"></div>
+    </div>
+    <div class="stage">
+      <div class="stage-n">03</div>
+      <div class="stage-name">ASR</div>
+      <div class="stage-mod">transcriber.py</div>
+      <div class="stage-bar" style="background:var(--purple)"></div>
+    </div>
+    <div class="stage">
+      <div class="stage-n">04</div>
+      <div class="stage-name">Normalization</div>
+      <div class="stage-mod">tamil_normalizer.py</div>
+      <div class="stage-bar" style="background:var(--accent3)"></div>
+    </div>
+    <div class="stage">
+      <div class="stage-n">05</div>
+      <div class="stage-name">Translation</div>
+      <div class="stage-mod">translator.py</div>
+      <div class="stage-bar" style="background:var(--pink)"></div>
+    </div>
+    <div class="stage">
+      <div class="stage-n">06</div>
+      <div class="stage-name">Profiling</div>
+      <div class="stage-mod">speaker_profiler.py</div>
+      <div class="stage-bar" style="background:var(--pink)"></div>
+    </div>
+    <div class="stage">
+      <div class="stage-n">07</div>
+      <div class="stage-name">TTS Synthesis</div>
+      <div class="stage-mod">synthesizer.py</div>
+      <div class="stage-bar" style="background:var(--accent2)"></div>
+    </div>
+    <div class="stage">
+      <div class="stage-n">08</div>
+      <div class="stage-name">Stitching</div>
+      <div class="stage-mod">stitcher.py</div>
+      <div class="stage-bar" style="background:var(--accent)"></div>
+    </div>
+    <div class="stage">
+      <div class="stage-n">09</div>
+      <div class="stage-name">Transcript</div>
+      <div class="stage-mod">orchestrator.py</div>
+      <div class="stage-bar" style="background:var(--purple)"></div>
+    </div>
+    <div class="stage">
+      <div class="stage-n">10</div>
+      <div class="stage-name">Save Job</div>
+      <div class="stage-mod">models.py</div>
+      <div class="stage-bar" style="background:var(--accent3)"></div>
+    </div>
+  </div>
+
+  <!-- SPEAKER PROFILES -->
+  <div class="sec-label">speaker profiles — from actual run</div>
+  <div class="spk-grid">
+    <div class="spk-card">
+      <div class="spk-avatar" style="background:rgba(232,121,160,.15);color:#e879a0;">S0</div>
+      <div class="spk-name">SPEAKER_00</div>
+      <div class="spk-sub">speaker_profiler.py · estimate_pitch()</div>
+      <div class="spk-stats">
+        <div class="spk-row"><span class="spk-row-lbl">gender</span><span class="spk-row-val"><span class="badge b-pink">Female</span></span></div>
+        <div class="spk-row"><span class="spk-row-lbl">median F0</span><span class="spk-row-val">235.3 Hz</span></div>
+        <div class="spk-row"><span class="spk-row-lbl">pitch readings</span><span class="spk-row-val">235.3 · 271.2 · 222.2 · 254.0 · 213.3</span></div>
+        <div class="spk-row"><span class="spk-row-lbl">speaking duration</span><span class="spk-row-val">14.9s</span></div>
+        <div class="spk-row"><span class="spk-row-lbl">segments</span><span class="spk-row-val">5 segments</span></div>
+        <div class="spk-row"><span class="spk-row-lbl">VCTK voice</span><span class="spk-row-val">p225 / p228 / p229</span></div>
+        <div class="spk-row"><span class="spk-row-lbl">TTS model</span><span class="spk-row-val">tts_models/en/vctk/vits</span></div>
+      </div>
+    </div>
+    <div class="spk-card">
+      <div class="spk-avatar" style="background:rgba(79,142,247,.15);color:#4f8ef7;">S1</div>
+      <div class="spk-name">SPEAKER_01</div>
+      <div class="spk-sub">speaker_profiler.py · estimate_pitch()</div>
+      <div class="spk-stats">
+        <div class="spk-row"><span class="spk-row-lbl">gender</span><span class="spk-row-val"><span class="badge b-blue">Male</span></span></div>
+        <div class="spk-row"><span class="spk-row-lbl">median F0</span><span class="spk-row-val">165.8 Hz</span></div>
+        <div class="spk-row"><span class="spk-row-lbl">pitch readings</span><span class="spk-row-val">165.8 · 161.6 · 177.8</span></div>
+        <div class="spk-row"><span class="spk-row-lbl">speaking duration</span><span class="spk-row-val">8.4s</span></div>
+        <div class="spk-row"><span class="spk-row-lbl">segments</span><span class="spk-row-val">3 segments</span></div>
+        <div class="spk-row"><span class="spk-row-lbl">VCTK voice</span><span class="spk-row-val">p226 / p227 / p232</span></div>
+        <div class="spk-row"><span class="spk-row-lbl">TTS model</span><span class="spk-row-val">tts_models/en/vctk/vits</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODULE METRICS TABLE -->
+  <div class="sec-label">module-level metrics — exact values from code and logs</div>
+  <div class="tbl-wrap">
+    <div class="tbl-title"><div class="tbl-title-dot" style="background:var(--accent2)"></div>per-module performance</div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:18%">module</th>
+          <th style="width:20%">metric</th>
+          <th style="width:18%">value</th>
+          <th style="width:22%">score</th>
+          <th style="width:12%">status</th>
+          <th style="width:10%">file</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="mn">Preprocessing</div><div class="ms">ffmpeg + spectral noise gate</div></td>
+          <td>Audio converted to WAV</td>
+          <td style="font-family:var(--mono);font-size:12px">31.0s · 16kHz mono</td>
+          <td><div class="bar-row"><div class="bar-bg"><div class="bar-fill" style="width:100%;background:#38d9a9"></div></div><span class="bar-pct">100%</span></div></td>
+          <td><span class="badge b-green">Pass</span></td>
+          <td style="font-family:var(--mono);font-size:10px;color:var(--muted)">preprocessor.py</td>
+        </tr>
+        <tr>
+          <td><div class="mn">Preprocessing</div><div class="ms">load_wav() · np.frombuffer</div></td>
+          <td>Samples loaded</td>
+          <td style="font-family:var(--mono);font-size:12px">495,793</td>
+          <td><div class="bar-row"><div class="bar-bg"><div class="bar-fill" style="width:100%;background:#38d9a9"></div></div><span class="bar-pct">OK</span></div></td>
+          <td><span class="badge b-green">Pass</span></td>
+          <td style="font-family:var(--mono);font-size:10px;color:var(--muted)">preprocessor.py</td>
+        </tr>
+        <tr>
+          <td><div class="mn">Preprocessing</div><div class="ms">spectral_noise_reduction()</div></td>
+          <td>Noise reduction</td>
+          <td style="font-family:var(--mono);font-size:12px">spectral gate</td>
+          <td><div class="bar-row"><div class="bar-bg"><div class="bar-fill" style="width:90%;background:#38d9a9"></div></div><span class="bar-pct">Done</span></div></td>
+          <td><span class="badge b-green">Done</span></td>
+          <td style="font-family:var(--mono);font-size:10px;color:var(--muted)">preprocessor.py</td>
+        </tr>
+        <tr>
+          <td><div class="mn">Diarization</div><div class="ms">pyannote/speaker-diarization-3.1</div></td>
+          <td>Raw segments detected</td>
+          <td style="font-family:var(--mono);font-size:12px">16 segments</td>
+          <td><div class="bar-row"><div class="bar-bg"><div class="bar-fill" style="width:100%;background:#4f8ef7"></div></div><span class="bar-pct">16</span></div></td>
+          <td><span class="badge b-blue">Detected</span></td>
+          <td style="font-family:var(--mono);font-size:10px;color:var(--muted)">diarizer.py</td>
+        </tr>
+        <tr>
+          <td><div class="mn">Diarization</div><div class="ms">merge_consecutive_same_speaker()</div></td>
+          <td>After merge + 0.8s filter</td>
+          <td style="font-family:var(--mono);font-size:12px">8 segments</td>
+          <td><div class="bar-row"><div class="bar-bg"><div class="bar-fill" style="width:50%;background:#4f8ef7"></div></div><span class="bar-pct">50%</span></div></td>
+          <td><span class="badge b-blue">Merged</span></td>
+          <td style="font-family:var(--mono);font-size:10px;color:var(--muted)">diarizer.py</td>
+        </tr>
+        <tr>
+          <td><div class="mn">Diarization</div><div class="ms">normalize_speaker_labels()</div></td>
+          <td>Unique speakers found</td>
+          <td style="font-family:var(--mono);font-size:12px">2 speakers</td>
+          <td><div class="bar-row"><div class="bar-bg"><div class="bar-fill" style="width:100%;background:#38d9a9"></div></div><span class="bar-pct">2/2</span></div></td>
+          <td><span class="badge b-green">Correct</span></td>
+          <td style="font-family:var(--mono);font-size:10px;color:var(--muted)">diarizer.py</td>
+        </tr>
+        <tr>
+          <td><div class="mn">ASR — Whisper medium</div><div class="ms">detect_language() · mel spectrogram</div></td>
+          <td>Language detection</td>
+          <td style="font-family:var(--mono);font-size:12px">en · conf 1.00</td>
+          <td><div class="bar-row"><div class="bar-bg"><div class="bar-fill" style="width:100%;background:#38d9a9"></div></div><span class="bar-pct">100%</span></div></td>
+          <td><span class="badge b-green">Exact</span></td>
+          <td style="font-family:var(--mono);font-size:10px;color:var(--muted)">transcriber.py</td>
+        </tr>
+        <tr>
+          <td><div class="mn">ASR — Whisper medium</div><div class="ms">avg_logprob → np.exp() clipped</div></td>
+          <td>Seg 1 confidence</td>
+          <td style="font-family:var(--mono);font-size:12px">0.79</td>
+          <td><div class="bar-row"><div class="bar-bg"><div class="bar-fill" style="width:79%;background:#4f8ef7"></div></div><span class="bar-pct">79%</span></div></td>
+          <td><span class="badge b-blue">Good</span></td>
+          <td style="font-family:var(--mono);font-size:10px;color:var(--muted)">transcriber.py</td>
+        </tr>
+        <tr>
+          <td><div class="mn">ASR — Whisper medium</div><div class="ms">avg across 8 segments</div></td>
+          <td>Avg transcription conf</td>
+          <td style="font-family:var(--mono);font-size:12px">0.76</td>
+          <td><div class="bar-row"><div class="bar-bg"><div class="bar-fill" style="width:76%;background:#4f8ef7"></div></div><span class="bar-pct">76%</span></div></td>
+          <td><span class="badge b-blue">Good</span></td>
+          <td style="font-family:var(--mono);font-size:10px;color:var(--muted)">transcriber.py</td>
+        </tr>
+        <tr>
+          <td><div class="mn">Tamil normalization</div><div class="ms">95+ colloquial dict entries</div></td>
+          <td>Language of audio</td>
+          <td style="font-family:var(--mono);font-size:12px">English (no Tamil)</td>
+          <td><div class="bar-row"><div class="bar-bg"><div class="bar-fill" style="width:100%;background:#38d9a9"></div></div><span class="bar-pct">N/A</span></div></td>
+          <td><span class="badge b-dim">Skipped</span></td>
+          <td style="font-family:var(--mono);font-size:10px;color:var(--muted)">tamil_normalizer.py</td>
+        </tr>
+        <tr>
+          <td><div class="mn">Translation</div><div class="ms">IndicTrans2 → Whisper translate → dict</div></td>
+          <td>Segments translated</td>
+          <td style="font-family:var(--mono);font-size:12px">0 / 8</td>
+          <td><div class="bar-row"><div class="bar-bg"><div class="bar-fill" style="width:100%;background:#38d9a9"></div></div><span class="bar-pct">N/A</span></div></td>
+          <td><span class="badge b-green">Passthrough</span></td>
+          <td style="font-family:var(--mono);font-size:10px;color:var(--muted)">translator.py</td>
+        </tr>
+        <tr>
+          <td><div class="mn">Speaker profiling</div><div class="ms">autocorrelation · 25ms frames · 10ms hop</div></td>
+          <td>SPEAKER_00 median F0</td>
+          <td style="font-family:var(--mono);font-size:12px">235.3 Hz</td>
+          <td><div class="bar-row"><div class="bar-bg"><div class="bar-fill" style="width:82%;background:#e879a0"></div></div><span class="bar-pct">female</span></div></td>
+          <td><span class="badge b-pink">Female</span></td>
+          <td style="font-family:var(--mono);font-size:10px;color:var(--muted)">speaker_profiler.py</td>
+        </tr>
+        <tr>
+          <td><div class="mn">Speaker profiling</div><div class="ms">threshold: &lt;165 Hz=male · &gt;180 Hz=female</div></td>
+          <td>SPEAKER_01 median F0</td>
+          <td style="font-family:var(--mono);font-size:12px">165.8 Hz</td>
+          <td><div class="bar-row"><div class="bar-bg"><div class="bar-fill" style="width:58%;background:#4f8ef7"></div></div><span class="bar-pct">male</span></div></td>
+          <td><span class="badge b-blue">Male</span></td>
+          <td style="font-family:var(--mono);font-size:10px;color:var(--muted)">speaker_profiler.py</td>
+        </tr>
+        <tr>
+          <td><div class="mn">TTS — Coqui VITS</div><div class="ms">tts_models/en/vctk/vits</div></td>
+          <td>Segments synthesized</td>
+          <td style="font-family:var(--mono);font-size:12px">8 / 8</td>
+          <td><div class="bar-row"><div class="bar-bg"><div class="bar-fill" style="width:100%;background:#38d9a9"></div></div><span class="bar-pct">100%</span></div></td>
+          <td><span class="badge b-green">Complete</span></td>
+          <td style="font-family:var(--mono);font-size:10px;color:var(--muted)">synthesizer.py</td>
+        </tr>
+        <tr>
+          <td><div class="mn">TTS — Coqui VITS</div><div class="ms">processing time / audio duration</div></td>
+          <td>Avg real-time factor</td>
+          <td style="font-family:var(--mono);font-size:12px">2.1× (CPU)</td>
+          <td><div class="bar-row"><div class="bar-bg"><div class="bar-fill" style="width:60%;background:#f59e42"></div></div><span class="bar-pct">slow</span></div></td>
+          <td><span class="badge b-amber">CPU mode</span></td>
+          <td style="font-family:var(--mono);font-size:10px;color:var(--muted)">synthesizer.py</td>
+        </tr>
+        <tr>
+          <td><div class="mn">Audio stitching</div><div class="ms">stitch_audio_segments() · WAV concat</div></td>
+          <td>Output vs input duration</td>
+          <td style="font-family:var(--mono);font-size:12px">31.4s / 31.0s</td>
+          <td><div class="bar-row"><div class="bar-bg"><div class="bar-fill" style="width:99%;background:#38d9a9"></div></div><span class="bar-pct">98.7%</span></div></td>
+          <td><span class="badge b-green">98.7%</span></td>
+          <td style="font-family:var(--mono);font-size:10px;color:var(--muted)">stitcher.py</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- STANDARD EVALUATION METRICS -->
+  <div class="sec-label">standard AI/ML evaluation metrics</div>
+  <div class="tbl-wrap">
+    <div class="tbl-title"><div class="tbl-title-dot" style="background:var(--purple)"></div>research-standard metrics for this system</div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:10%">metric</th>
+          <th style="width:18%">full name</th>
+          <th style="width:25%">what it measures</th>
+          <th style="width:15%">formula</th>
+          <th style="width:12%">ideal target</th>
+          <th style="width:20%">applies to</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="badge b-blue">DER</span></td>
+          <td>Diarization Error Rate</td>
+          <td>% audio mis-attributed to wrong speaker</td>
+          <td style="font-family:var(--mono);font-size:11px">(FA+MISS+ERROR)/total</td>
+          <td><span class="badge b-green">&lt; 10%</span></td>
+          <td style="font-size:12px;color:var(--muted)">diarizer.py · pyannote</td>
+        </tr>
+        <tr>
+          <td><span class="badge b-purple">WER</span></td>
+          <td>Word Error Rate</td>
+          <td>% words wrong in transcription output</td>
+          <td style="font-family:var(--mono);font-size:11px">(S+D+I)/N_ref</td>
+          <td><span class="badge b-green">&lt; 20%</span></td>
+          <td style="font-size:12px;color:var(--muted)">transcriber.py · whisper</td>
+        </tr>
+        <tr>
+          <td><span class="badge b-purple">CER</span></td>
+          <td>Character Error Rate</td>
+          <td>% characters wrong in transcription</td>
+          <td style="font-family:var(--mono);font-size:11px">(S+D+I)/N_chars</td>
+          <td><span class="badge b-green">&lt; 15%</span></td>
+          <td style="font-size:12px;color:var(--muted)">transcriber.py · whisper</td>
+        </tr>
+        <tr>
+          <td><span class="badge b-amber">RTF</span></td>
+          <td>Real-Time Factor</td>
+          <td>TTS processing time / audio output duration</td>
+          <td style="font-family:var(--mono);font-size:11px">t_proc / t_audio</td>
+          <td><span class="badge b-green">&lt; 1.0×</span></td>
+          <td style="font-size:12px;color:var(--muted)">synthesizer.py · coqui VITS</td>
+        </tr>
+        <tr>
+          <td><span class="badge b-pink">MOS</span></td>
+          <td>Mean Opinion Score</td>
+          <td>Human-rated naturalness of dubbed voice (1–5)</td>
+          <td style="font-family:var(--mono);font-size:11px">avg(human ratings)</td>
+          <td><span class="badge b-green">&gt; 3.5</span></td>
+          <td style="font-size:12px;color:var(--muted)">synthesizer.py · final dub</td>
+        </tr>
+        <tr>
+          <td><span class="badge b-green">BLEU</span></td>
+          <td>Bilingual Evaluation Understudy</td>
+          <td>Translation quality vs reference text (0–1)</td>
+          <td style="font-family:var(--mono);font-size:11px">precision n-gram overlap</td>
+          <td><span class="badge b-green">&gt; 0.40</span></td>
+          <td style="font-size:12px;color:var(--muted)">translator.py · IndicTrans2</td>
+        </tr>
+        <tr>
+          <td><span class="badge b-blue">F0 err</span></td>
+          <td>Fundamental Freq Error</td>
+          <td>Pitch estimation accuracy for gender detection</td>
+          <td style="font-family:var(--mono);font-size:11px">|predicted - true| Hz</td>
+          <td><span class="badge b-green">&lt; ±5 Hz</span></td>
+          <td style="font-size:12px;color:var(--muted)">speaker_profiler.py · F0</td>
+        </tr>
+        <tr>
+          <td><span class="badge b-purple">Conf</span></td>
+          <td>ASR Confidence Score</td>
+          <td>Whisper certainty: exp(avg_logprob) clipped 0–1</td>
+          <td style="font-family:var(--mono);font-size:11px">clip(exp(logprob),0,1)</td>
+          <td><span class="badge b-green">&gt; 0.75</span></td>
+          <td style="font-size:12px;color:var(--muted)">transcriber.py · whisper</td>
+        </tr>
+        <tr>
+          <td><span class="badge b-amber">PESQ</span></td>
+          <td>Perceptual Eval of Speech Quality</td>
+          <td>Audio quality after preprocessing (−0.5 to 4.5)</td>
+          <td style="font-family:var(--mono);font-size:11px">ITU-T P.862 standard</td>
+          <td><span class="badge b-green">&gt; 3.0</span></td>
+          <td style="font-size:12px;color:var(--muted)">preprocessor.py · output</td>
+        </tr>
+        <tr>
+          <td><span class="badge b-green">SCA</span></td>
+          <td>Speaker Count Accuracy</td>
+          <td>Correctly detecting number of speakers</td>
+          <td style="font-family:var(--mono);font-size:11px">predicted == actual</td>
+          <td><span class="badge b-green">100%</span></td>
+          <td style="font-size:12px;color:var(--muted)">diarizer.py · achieved ✓</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- TWO COLUMN -->
+  <div class="two-col">
+
+    <!-- TTS FALLBACK CHAIN -->
+    <div>
+      <div class="sec-label">TTS fallback chain — synthesizer.py</div>
+      <div class="tbl-wrap">
+        <div class="tbl-title"><div class="tbl-title-dot" style="background:var(--accent2)"></div>3-layer fallback · synthesize_segment()</div>
+        <table>
+          <thead><tr><th>priority</th><th>engine</th><th>function</th><th>status</th></tr></thead>
+          <tbody>
+            <tr>
+              <td style="font-family:var(--mono);font-size:12px;color:var(--accent2)">1st</td>
+              <td><div class="mn">Coqui VITS</div><div class="ms">tts_models/en/vctk/vits</div></td>
+              <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">synthesize_with_coqui()</td>
+              <td><span class="badge b-green">Active</span></td>
+            </tr>
+            <tr>
+              <td style="font-family:var(--mono);font-size:12px;color:var(--accent3)">2nd</td>
+              <td><div class="mn">pyttsx3</div><div class="ms">local system voices · David / Zira</div></td>
+              <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">synthesize_with_pyttsx3()</td>
+              <td><span class="badge b-amber">Fallback</span></td>
+            </tr>
+            <tr>
+              <td style="font-family:var(--mono);font-size:12px;color:var(--muted)">3rd</td>
+              <td><div class="mn">espeak-ng</div><div class="ms">en+m1 / en+f1 voice flags</div></td>
+              <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">synthesize_with_espeak()</td>
+              <td><span class="badge b-dim">Last resort</span></td>
+            </tr>
+            <tr>
+              <td style="font-family:var(--mono);font-size:12px;color:var(--red)">4th</td>
+              <td><div class="mn">Silent WAV</div><div class="ms">zeros · 16kHz · placeholder</div></td>
+              <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">generate_silent_wav()</td>
+              <td><span class="badge b-red">Emergency</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TRANSLATION CHAIN -->
+    <div>
+      <div class="sec-label">translation fallback chain — translator.py</div>
+      <div class="tbl-wrap">
+        <div class="tbl-title"><div class="tbl-title-dot" style="background:var(--pink)"></div>3-layer fallback · translate_segment()</div>
+        <table>
+          <thead><tr><th>priority</th><th>method</th><th>config</th><th>status</th></tr></thead>
+          <tbody>
+            <tr>
+              <td style="font-family:var(--mono);font-size:12px;color:var(--accent2)">1st</td>
+              <td><div class="mn">IndicTrans2</div><div class="ms">ai4bharat · 1B param model</div></td>
+              <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">&gt;&gt;ta&lt;&lt; prefix · 4 beams</td>
+              <td><span class="badge b-blue">Primary</span></td>
+            </tr>
+            <tr>
+              <td style="font-family:var(--mono);font-size:12px;color:var(--accent3)">2nd</td>
+              <td><div class="mn">Whisper translate</div><div class="ms">task='translate' · lang='ta'</div></td>
+              <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">reuses loaded model</td>
+              <td><span class="badge b-amber">Fallback</span></td>
+            </tr>
+            <tr>
+              <td style="font-family:var(--mono);font-size:12px;color:var(--muted)">3rd</td>
+              <td><div class="mn">Dictionary lookup</div><div class="ms">BASIC_TAMIL_EN_DICT · 40+ entries</div></td>
+              <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">word-by-word replace</td>
+              <td><span class="badge b-dim">Last resort</span></td>
+            </tr>
+            <tr>
+              <td style="font-family:var(--mono);font-size:12px;color:var(--accent)">auto</td>
+              <td><div class="mn">English passthrough</div><div class="ms">is_tamil=False → skip</div></td>
+              <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">no translation needed</td>
+              <td><span class="badge b-green">Current run</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- PITCH ALGORITHM -->
+  <div class="sec-label">pitch detection algorithm — speaker_profiler.py · estimate_pitch()</div>
+  <div class="tbl-wrap">
+    <div class="tbl-title"><div class="tbl-title-dot" style="background:var(--accent3)"></div>autocorrelation-based F0 estimation</div>
+    <table>
+      <thead><tr><th style="width:22%">parameter</th><th style="width:28%">value from code</th><th style="width:50%">purpose</th></tr></thead>
+      <tbody>
+        <tr>
+          <td style="font-family:var(--mono);font-size:12px;color:var(--accent3)">frame_length</td>
+          <td style="font-family:var(--mono);font-size:12px">int(sr × 0.025) = 400 samples</td>
+          <td style="font-size:12px;color:var(--muted)">25ms analysis window — captures ~2-3 pitch periods per frame</td>
+        </tr>
+        <tr>
+          <td style="font-family:var(--mono);font-size:12px;color:var(--accent3)">hop_length</td>
+          <td style="font-family:var(--mono);font-size:12px">int(sr × 0.010) = 160 samples</td>
+          <td style="font-size:12px;color:var(--muted)">10ms step — 75% frame overlap for smooth pitch tracking</td>
+        </tr>
+        <tr>
+          <td style="font-family:var(--mono);font-size:12px;color:var(--accent3)">min_period</td>
+          <td style="font-family:var(--mono);font-size:12px">int(sr / 400) = 40 samples</td>
+          <td style="font-size:12px;color:var(--muted)">upper pitch limit 400 Hz — above human voice range</td>
+        </tr>
+        <tr>
+          <td style="font-family:var(--mono);font-size:12px;color:var(--accent3)">max_period</td>
+          <td style="font-family:var(--mono);font-size:12px">int(sr / 60) = 267 samples</td>
+          <td style="font-size:12px;color:var(--muted)">lower pitch limit 60 Hz — below typical human vocal range</td>
+        </tr>
+        <tr>
+          <td style="font-family:var(--mono);font-size:12px;color:var(--accent3)">energy threshold</td>
+          <td style="font-family:var(--mono);font-size:12px">RMS &lt; 0.01 → skip</td>
+          <td style="font-size:12px;color:var(--muted)">silence detection — prevents pitch errors on silent frames</td>
+        </tr>
+        <tr>
+          <td style="font-family:var(--mono);font-size:12px;color:var(--accent3)">peak threshold</td>
+          <td style="font-family:var(--mono);font-size:12px">autocorr[peak] &gt; 0.3 × autocorr[0]</td>
+          <td style="font-size:12px;color:var(--muted)">voiced detection — rejects unvoiced/noisy frames</td>
+        </tr>
+        <tr>
+          <td style="font-family:var(--mono);font-size:12px;color:var(--accent3)">output</td>
+          <td style="font-family:var(--mono);font-size:12px">np.median(pitches)</td>
+          <td style="font-size:12px;color:var(--muted)">median pitch across all valid frames — robust to outliers</td>
+        </tr>
+        <tr>
+          <td style="font-family:var(--mono);font-size:12px;color:var(--pink)">gender boundary</td>
+          <td style="font-family:var(--mono);font-size:12px">&lt;165 Hz=male · &gt;180 Hz=female</td>
+          <td style="font-size:12px;color:var(--muted)">detect_gender_from_pitch() · 165-180 Hz overlap → defaults male</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- DATABASE MODEL -->
+  <div class="sec-label">database model — AudioJob · web/models.py</div>
+  <div class="tbl-wrap">
+    <div class="tbl-title"><div class="tbl-title-dot" style="background:var(--accent)"></div>AudioJob fields — 16 fields tracked per job</div>
+    <table>
+      <thead><tr><th style="width:20%">field</th><th style="width:20%">type</th><th style="width:30%">purpose</th><th style="width:30%">values / notes</th></tr></thead>
+      <tbody>
+        <tr><td style="font-family:var(--mono);font-size:12px;color:var(--accent)">id</td><td><span class="badge b-purple">UUIDField</span></td><td style="font-size:12px;color:var(--muted)">unique job identifier</td><td style="font-family:var(--mono);font-size:11px;color:var(--muted)">uuid4 · primary key</td></tr>
+        <tr><td style="font-family:var(--mono);font-size:12px;color:var(--accent)">status</td><td><span class="badge b-blue">CharField</span></td><td style="font-size:12px;color:var(--muted)">current pipeline stage</td><td style="font-family:var(--mono);font-size:11px;color:var(--muted)">uploaded·preprocessing·diarizing·transcribing·translating·synthesizing·completed·failed</td></tr>
+        <tr><td style="font-family:var(--mono);font-size:12px;color:var(--accent)">progress</td><td><span class="badge b-blue">IntegerField</span></td><td style="font-size:12px;color:var(--muted)">0–100 progress percent</td><td style="font-family:var(--mono);font-size:11px;color:var(--muted)">5→15→20→35→40→55→62→70→75→78→90→95→100</td></tr>
+        <tr><td style="font-family:var(--mono);font-size:12px;color:var(--accent)">num_speakers</td><td><span class="badge b-blue">IntegerField</span></td><td style="font-size:12px;color:var(--muted)">detected speaker count</td><td style="font-family:var(--mono);font-size:11px;color:var(--muted)">set after diarization stage</td></tr>
+        <tr><td style="font-family:var(--mono);font-size:12px;color:var(--accent)">transcript</td><td><span class="badge b-amber">JSONField</span></td><td style="font-size:12px;color:var(--muted)">full per-segment transcript</td><td style="font-family:var(--mono);font-size:11px;color:var(--muted)">speaker·text·english_text·gender·confidence·start·end</td></tr>
+        <tr><td style="font-family:var(--mono);font-size:12px;color:var(--accent)">speaker_profiles</td><td><span class="badge b-amber">JSONField</span></td><td style="font-size:12px;color:var(--muted)">gender, pitch, voice per speaker</td><td style="font-family:var(--mono);font-size:11px;color:var(--muted)">label·gender·voice·avg_pitch·total_duration</td></tr>
+        <tr><td style="font-family:var(--mono);font-size:12px;color:var(--accent)">dubbed_audio</td><td><span class="badge b-blue">FileField</span></td><td style="font-size:12px;color:var(--muted)">final stitched WAV output</td><td style="font-family:var(--mono);font-size:11px;color:var(--muted)">jobs/{id}/{id}_dubbed.wav</td></tr>
+        <tr><td style="font-family:var(--mono);font-size:12px;color:var(--accent)">completed_at</td><td><span class="badge b-blue">DateTimeField</span></td><td style="font-size:12px;color:var(--muted)">pipeline completion timestamp</td><td style="font-family:var(--mono);font-size:11px;color:var(--muted)">null until status=completed</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- TECH STACK -->
+  <div class="sec-label">full technology stack</div>
+  <div class="tbl-wrap" style="padding:18px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
+      <div>
+        <div style="font-size:10px;font-family:var(--mono);color:var(--muted);margin-bottom:8px">AI / ML models</div>
+        <div class="tech-row">
+          <span class="tech-pill">pyannote 4.x</span>
+          <span class="tech-pill">Whisper medium</span>
+          <span class="tech-pill">Coqui VITS</span>
+          <span class="tech-pill">IndicTrans2 1B</span>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:10px;font-family:var(--mono);color:var(--muted);margin-bottom:8px">backend framework</div>
+        <div class="tech-row">
+          <span class="tech-pill">Django 5.2</span>
+          <span class="tech-pill">Python 3.10</span>
+          <span class="tech-pill">SQLite</span>
+          <span class="tech-pill">Threading</span>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:10px;font-family:var(--mono);color:var(--muted);margin-bottom:8px">audio processing</div>
+        <div class="tech-row">
+          <span class="tech-pill">ffmpeg</span>
+          <span class="tech-pill">librosa</span>
+          <span class="tech-pill">numpy</span>
+          <span class="tech-pill">scipy</span>
+          <span class="tech-pill">soundfile</span>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:10px;font-family:var(--mono);color:var(--muted);margin-bottom:8px">deep learning</div>
+        <div class="tech-row">
+          <span class="tech-pill">PyTorch (CPU)</span>
+          <span class="tech-pill">HuggingFace Hub</span>
+          <span class="tech-pill">transformers</span>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:10px;font-family:var(--mono);color:var(--muted);margin-bottom:8px">TTS fallbacks</div>
+        <div class="tech-row">
+          <span class="tech-pill">pyttsx3</span>
+          <span class="tech-pill">espeak-ng</span>
+          <span class="tech-pill">wave (stdlib)</span>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:10px;font-family:var(--mono);color:var(--muted);margin-bottom:8px">supported languages</div>
+        <div class="tech-row">
+          <span class="tech-pill">Tamil</span>
+          <span class="tech-pill">English</span>
+          <span class="tech-pill">Tanglish</span>
+          <span class="tech-pill">Code-mixed</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="footer-left">speechdub · multilingual multi-speaker speech processing &amp; english dubbing system · django 5.2 · python 3.10</div>
+  <div style="display:flex;gap:8px">
+    <span class="badge b-green">pipeline: operational</span>
+    <span class="badge b-blue">10 stages</span>
+    <span class="badge b-purple">6 AI modules</span>
+    <span class="badge b-amber">cpu mode</span>
+  </div>
+</div>
+
+</body>
+</html>

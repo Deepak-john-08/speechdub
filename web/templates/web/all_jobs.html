@@ -1,0 +1,77 @@
+{% extends 'web/base.html' %}
+{% block title %}All Jobs — SpeechDub{% endblock %}
+{% block content %}
+
+<div class="flex items-center justify-between mb-2" style="margin-bottom:2rem;">
+  <div>
+    <h1 style="font-family:var(--font-head);font-size:1.6rem;font-weight:800;">All Jobs</h1>
+    <p class="text-muted" style="font-size:13px;">{{ jobs.count }} total job{{ jobs.count|pluralize }}</p>
+  </div>
+  <a href="{% url 'dashboard' %}" class="btn btn-primary">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    New Upload
+  </a>
+</div>
+
+<div class="card">
+  {% if jobs %}
+  <div style="overflow-x:auto;">
+    <table>
+      <thead>
+        <tr>
+          <th>File</th>
+          <th>Speakers</th>
+          <th>Max</th>
+          <th>Status</th>
+          <th>Progress</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for job in jobs %}
+        <tr>
+          <td>
+            <div style="font-weight:700;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ job.original_filename }}</div>
+            <div class="text-muted" style="font-size:11px;">{{ job.id|slice:":8" }}...</div>
+          </td>
+          <td>
+            {% if job.num_speakers %}
+            <span style="font-family:var(--font-head);font-weight:700;color:var(--accent);">{{ job.num_speakers }}</span>
+            {% else %}<span class="text-muted">—</span>{% endif %}
+          </td>
+          <td class="text-muted">{{ job.max_speakers }}</td>
+          <td><span class="badge badge-{{ job.status }}">{{ job.get_status_display }}</span></td>
+          <td style="min-width:100px;">
+            <div class="progress-wrap" style="width:80px;">
+              <div class="progress-bar" style="width:{{ job.progress }}%"></div>
+            </div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;">{{ job.progress }}%</div>
+          </td>
+          <td class="text-muted" style="font-size:12px;">{{ job.created_at|date:"M d, H:i" }}</td>
+          <td>
+            <div style="display:flex;gap:.4rem;">
+              {% if job.status == 'completed' %}
+              <a href="{% url 'job_result' job.id %}" class="btn btn-primary btn-sm">Results</a>
+              {% else %}
+              <a href="{% url 'job_status' job.id %}" class="btn btn-ghost btn-sm">View</a>
+              {% endif %}
+              <form method="post" action="{% url 'job_delete' job.id %}" style="display:inline;" onsubmit="return confirm('Delete this job?')">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger btn-sm">✕</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="card-body text-center text-muted" style="padding:3rem;">
+    <div style="font-size:3rem;margin-bottom:1rem;">🎙️</div>
+    <p>No jobs yet. <a href="{% url 'dashboard' %}" class="text-accent">Upload your first audio file</a></p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

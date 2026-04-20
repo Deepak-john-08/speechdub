@@ -1,0 +1,131 @@
+{% extends 'web/base.html' %}
+{% block title %}Results — {{ job.original_filename }}{% endblock %}
+{% block content %}
+
+<div style="max-width:800px;margin:0 auto;">
+  <div class="flex items-center gap-2 mb-2" style="margin-bottom:1.5rem;">
+    <a href="{% url 'dashboard' %}" class="btn btn-ghost btn-sm">← Dashboard</a>
+    <span class="text-muted">/</span>
+    <span class="text-muted" style="font-size:13px;">Results</span>
+  </div>
+
+  <!-- Header -->
+  <div style="margin-bottom:2rem;">
+    <div class="flex items-center gap-2 mb-1">
+      <h1 style="font-family:var(--font-head);font-size:1.5rem;font-weight:800;">Processing Complete</h1>
+      <span class="badge badge-completed">✓ Done</span>
+    </div>
+    <p class="text-muted" style="font-size:13px;">{{ job.original_filename }} · {{ job.num_speakers }} speaker{{ job.num_speakers|pluralize }} detected</p>
+  </div>
+
+  <!-- Speaker Profiles -->
+  {% if job.speaker_profiles %}
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="card-header">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Speaker Profiles
+    </div>
+    <div class="card-body">
+      <div style="display:flex;flex-wrap:wrap;gap:1rem;">
+        {% for speaker_id, profile in job.speaker_profiles.items %}
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1rem 1.2rem;min-width:160px;">
+          <div class="speaker-chip speaker-{{ forloop.counter0 }}" style="margin-bottom:.6rem;">
+            {{ profile.label|default:speaker_id }}
+          </div>
+          <div style="font-size:12px;color:var(--muted);">
+            Gender: <span style="color:var(--text);">{{ profile.gender|default:"Unknown"|title }}</span>
+          </div>
+          <div style="font-size:12px;color:var(--muted);">
+            Voice: <span style="color:var(--text);">{{ profile.voice|default:"Default" }}</span>
+          </div>
+          {% if profile.total_duration %}
+          <div style="font-size:12px;color:var(--muted);">
+            Duration: <span style="color:var(--text);">{{ profile.total_duration|floatformat:1 }}s</span>
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Dubbed Audio -->
+  {% if job.dubbed_audio %}
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="card-header">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+      English Dubbed Audio
+    </div>
+    <div class="card-body">
+      <audio controls style="width:100%;">
+        <source src="{{ job.dubbed_audio.url }}" type="audio/wav">
+        Your browser does not support audio playback.
+      </audio>
+      <div style="margin-top:1rem;">
+        <a href="{{ job.dubbed_audio.url }}" download class="btn btn-primary btn-sm">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download Dubbed Audio
+        </a>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Transcript -->
+  {% if job.transcript %}
+  <div class="card">
+    <div class="card-header flex items-center justify-between">
+      <span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        English Transcript
+      </span>
+      <span class="text-muted" style="font-size:12px;">{{ job.transcript|length }} segment{{ job.transcript|length|pluralize }}</span>
+    </div>
+    <div class="card-body">
+      <div class="transcript-block">
+        {% for seg in job.transcript %}
+        <div class="transcript-entry">
+          <div style="padding-top:.1rem;">
+            <div class="speaker-chip speaker-{{ seg.speaker_idx|default:0 }}">
+              {{ seg.speaker_label|default:"Speaker" }}
+              {% if seg.gender %}· {{ seg.gender }}{% endif %}
+            </div>
+          </div>
+          <div style="flex:1;">
+            <div class="transcript-text">
+              {% if seg.english_text %}
+              {{ seg.english_text }}
+              {% else %}
+              <span class="text-muted">[No transcription]</span>
+              {% endif %}
+              {% if seg.original_text and seg.original_text != seg.english_text %}
+              <div style="margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--border);font-size:12px;color:var(--muted);">
+                Original: {{ seg.original_text }}
+              </div>
+              {% endif %}
+            </div>
+            <div class="transcript-meta">
+              {% if seg.start is not None %}⏱ {{ seg.start|floatformat:1 }}s – {{ seg.end|floatformat:1 }}s{% endif %}
+              {% if seg.language %} · Lang: <span style="color:var(--accent);">{{ seg.language }}</span>{% endif %}
+              {% if seg.confidence %} · Confidence: {{ seg.confidence|floatformat:2 }}{% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="alert alert-info">No transcript available.</div>
+  {% endif %}
+
+  <!-- Job metadata -->
+  <div style="margin-top:1.5rem;padding:1rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--muted);">
+    <div class="grid-2">
+      <div>Job ID: <span style="color:var(--text);">{{ job.id }}</span></div>
+      <div>Completed: <span style="color:var(--text);">{{ job.updated_at|date:"M d Y H:i" }}</span></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,117 @@
+{% extends 'web/base.html' %}
+{% block title %}Processing — {{ job.original_filename }}{% endblock %}
+{% block content %}
+
+<div style="max-width:700px;margin:0 auto;">
+  <div class="flex items-center gap-2 mb-2" style="margin-bottom:1.5rem;">
+    <a href="{% url 'dashboard' %}" class="btn btn-ghost btn-sm">← Dashboard</a>
+    <span class="text-muted">/</span>
+    <span class="text-muted" style="font-size:13px;">Job Status</span>
+  </div>
+
+  <div class="card">
+    <div class="card-header flex items-center justify-between">
+      <span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Processing Status
+      </span>
+      <span class="badge badge-{{ job.status }}" id="status-badge">{{ job.get_status_display }}</span>
+    </div>
+    <div class="card-body">
+      <!-- File info -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-bottom:1.5rem;">
+        <div class="flex items-center justify-between">
+          <div>
+            <div style="font-family:var(--font-head);font-weight:700;">{{ job.original_filename }}</div>
+            <div class="text-muted" style="font-size:12px;margin-top:.2rem;">Job ID: {{ job.id }}</div>
+          </div>
+          <div style="text-align:right;">
+            {% if job.num_speakers %}
+            <div style="font-family:var(--font-head);font-size:1.8rem;font-weight:800;color:var(--accent);" id="speaker-count">{{ job.num_speakers }}</div>
+            <div class="text-muted" style="font-size:11px;">speakers detected</div>
+            {% else %}
+            <div class="text-muted" style="font-size:12px;" id="speaker-count">Detecting...</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Progress -->
+      <div style="margin-bottom:1.5rem;">
+        <div class="flex items-center justify-between mb-1" style="margin-bottom:.5rem;">
+          <span id="status-msg" style="font-size:13px;color:var(--muted);">{{ job.status_message|default:"Processing..." }}</span>
+          <span id="progress-pct" style="font-family:var(--font-head);font-weight:700;color:var(--accent);">{{ job.progress }}%</span>
+        </div>
+        <div class="progress-wrap" style="height:12px;">
+          <div class="progress-bar" id="progress-bar" style="width:{{ job.progress }}%;"></div>
+        </div>
+      </div>
+
+      <!-- Pipeline stages -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.5rem;margin-bottom:1.5rem;" id="stages">
+        {% for stage, label in stages %}
+        <div class="stage-item" data-stage="{{ stage }}" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.6rem .8rem;text-align:center;font-size:11px;color:var(--muted);">
+          {{ label }}
+        </div>
+        {% endfor %}
+      </div>
+
+      {% if job.status == 'failed' %}
+      <div class="alert alert-danger">
+        <strong>Error:</strong> {{ job.error_message|default:"Processing failed. Please try again." }}
+      </div>
+      <a href="{% url 'dashboard' %}" class="btn btn-ghost">← Try Again</a>
+      {% elif job.status == 'completed' %}
+      <div class="alert alert-success">✅ Processing complete! Your audio has been dubbed.</div>
+      <a href="{% url 'job_result' job.id %}" class="btn btn-primary">View Results →</a>
+      {% else %}
+      <div style="text-align:center;padding:1rem 0;">
+        <div class="spinner"></div>
+        <p class="text-muted" style="font-size:12px;">This may take a few minutes depending on audio length...</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const stages = {
+  'uploaded': 0, 'preprocessing': 1, 'diarizing': 2,
+  'transcribing': 3, 'translating': 4, 'synthesizing': 5,
+  'completed': 6, 'failed': -1
+};
+const stageNames = ['Uploaded','Preprocessing','Diarizing','Transcribing','Translating','Synthesizing','Done'];
+const currentStatus = '{{ job.status }}';
+
+{% if job.status not in 'completed,failed' %}
+function poll() {
+  fetch('/api/jobs/{{ job.id }}/status/')
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('progress-bar').style.width = data.progress + '%';
+      document.getElementById('progress-pct').textContent = data.progress + '%';
+      document.getElementById('status-msg').textContent = data.status_message || '';
+      document.getElementById('status-badge').textContent = data.status.charAt(0).toUpperCase() + data.status.slice(1);
+      document.getElementById('status-badge').className = 'badge badge-' + data.status;
+
+      if (data.num_speakers) {
+        document.getElementById('speaker-count').innerHTML = '<span style="font-family:var(--font-head);font-size:1.8rem;font-weight:800;color:var(--accent);">' + data.num_speakers + '</span><br><span class="text-muted" style="font-size:11px;">speakers detected</span>';
+      }
+
+      if (data.completed) {
+        window.location.href = data.result_url;
+      } else if (data.failed) {
+        window.location.reload();
+      } else {
+        setTimeout(poll, 2500);
+      }
+    })
+    .catch(() => setTimeout(poll, 3000));
+}
+setTimeout(poll, 2000);
+{% endif %}
+</script>
+{% endblock %}
